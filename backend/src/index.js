@@ -11,7 +11,7 @@ const PORT = process.env.PORT;
 const CRON_SCHEDULE = process.env.CRON_SCHEDULE;
 
 const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(',')
+  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim().replace(/\/+$/, ''))
   : ['http://localhost:8081', 'http://localhost:19006'];
 
 app.use(cors({
@@ -19,6 +19,7 @@ app.use(cors({
     if (!origin || ALLOWED_ORIGINS.includes(origin)) {
       callback(null, true);
     } else {
+      console.warn(`[cors] Blocked origin: ${origin}`);
       callback(new Error('Not allowed by CORS'));
     }
   },
