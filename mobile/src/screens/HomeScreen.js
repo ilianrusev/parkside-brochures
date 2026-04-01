@@ -193,7 +193,7 @@ export default function HomeScreen() {
 
       {brochures.length === 0 ? (
         <View style={styles.center}>
-          <Text style={styles.emptyText}>За съжаление няма Parkside инструменти в брошурите на {activeSource}</Text>
+          <Text style={styles.emptyText}>За съжаление няма Parkside продукти в брошурите на {activeSource}</Text>
         </View>
       ) : (
         <FlatList
