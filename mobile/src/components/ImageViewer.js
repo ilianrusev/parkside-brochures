@@ -13,9 +13,10 @@ import {
 const ASPECT_RATIO = 2400 / 1398;
 
 export default function ImageViewer({ page, visible, onClose }) {
-  const { width } = useWindowDimensions();
-  const imageWidth = width;
-  const imageHeight = imageWidth * ASPECT_RATIO;
+  const { width, height } = useWindowDimensions();
+  const maxWidth = Math.min(width, 500);
+  const imageWidth = maxWidth;
+  const imageHeight = Math.min(imageWidth * ASPECT_RATIO, height - 100);
 
   if (!page) return null;
 
@@ -52,6 +53,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#000',
+    alignItems: 'center',
   },
   header: {
     flexDirection: 'row',

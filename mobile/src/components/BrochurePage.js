@@ -4,10 +4,13 @@ import { View, Image, Text, StyleSheet, TouchableOpacity, useWindowDimensions } 
 const ASPECT_RATIO = 2400 / 1398;
 const GAP = 8;
 const PADDING = 12;
+const MAX_TILE_WIDTH = 220;
+const MAX_CONTAINER_WIDTH = 500;
 
 export default function BrochurePage({ page, onPress }) {
-  const { width } = useWindowDimensions();
-  const tileWidth = (width - PADDING * 2 - GAP) / 2;
+  const { width: screenWidth } = useWindowDimensions();
+  const containerWidth = Math.min(screenWidth, MAX_CONTAINER_WIDTH);
+  const tileWidth = (containerWidth - PADDING * 2 - GAP) / 2;
   const tileHeight = tileWidth * ASPECT_RATIO;
 
   return (
@@ -30,8 +33,8 @@ export default function BrochurePage({ page, onPress }) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
+    backgroundColor: 'rgb(30, 32, 38)',
+    borderRadius: 16,
     overflow: 'hidden',
     elevation: 2,
     shadowColor: '#000',
@@ -43,7 +46,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 6,
     right: 6,
-    backgroundColor: 'rgba(26,122,46,0.85)',
+    backgroundColor: 'rgba(4,65,44,0.85)',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 8,

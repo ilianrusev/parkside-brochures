@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import BrochurePage from "../components/BrochurePage";
@@ -21,15 +22,15 @@ const LOGOS = {
   kaufland: require("../../assets/kaufland-logo.png"),
 };
 
-/**
- * Pair up items into rows of 2 for grid display.
- * Each "row" object has { row: [page, page?], key: string }.
- */
-function pairItems(items) {
+const MAX_TILE_WIDTH = 220;
+const GAP = 8;
+const PADDING = 12;
+
+function chunkItems(items, columns) {
   const rows = [];
-  for (let i = 0; i < items.length; i += 2) {
+  for (let i = 0; i < items.length; i += columns) {
     rows.push({
-      row: items.slice(i, i + 2),
+      row: items.slice(i, i + columns),
       key: `row-${items[i].brochure_id}-${items[i].page_number}`,
     });
   }
@@ -92,7 +93,10 @@ export default function HomeScreen() {
   }, [activeSource, brochures, activeBrochureId]);
 
   const activeBrochure = brochures.find((b) => b.brochureId === activeBrochureId);
-  const rows = activeBrochure ? pairItems(activeBrochure.allPages) : [];
+  const { width: screenWidth } = useWindowDimensions();
+  const containerWidth = Math.min(screenWidth, 500);
+  const columns = 2;
+  const rows = activeBrochure ? chunkItems(activeBrochure.allPages, columns) : [];
 
   if (loading) {
     return (
@@ -122,7 +126,7 @@ export default function HomeScreen() {
         <View style={styles.center}>
           <Text style={styles.emptyIcon}>🔧</Text>
           <Text style={styles.emptyText}>
-            No Parkside pages found in current brochures
+            За съжаление няма Parkside предложения в брошурите
           </Text>
           <Text style={styles.retry} onPress={loadPages}>
             Tap to refresh
@@ -133,10 +137,22 @@ export default function HomeScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.titleBar}>
-        <Text style={styles.titleBarText}>🔧 Актуални Parkside предложения</Text>
+    <View style={styles.outerWrapper}>
+      <View style={styles.titleBarOuter}>
+        <View style={[styles.titleBar, { maxWidth: 500, width: "100%" }]}>
+          <View style={styles.titleRow}>
+            <Text style={styles.titleWrench}>🔧</Text>
+            <View>
+              <Text style={styles.titleBarText}>
+                <Text style={styles.titleHighlight}>PARKSIDE</Text> Предложения
+              </Text>
+              <Text style={styles.titleSubText}>Актуални оферти от брошурите</Text>
+            </View>
+          </View>
+        </View>
       </View>
+      <View style={styles.divider} />
+      <SafeAreaView style={styles.safeArea}>
 
       {/* Source tabs */}
       <View style={styles.sourceTabs}>
@@ -147,7 +163,13 @@ export default function HomeScreen() {
             onPress={() => setActiveSource(src)}
             activeOpacity={0.7}
           >
-            <Image source={LOGOS[src]} style={styles.sourceLogo} />
+            <View style={styles.sourceTabInner}>
+              <Image source={LOGOS[src]} style={styles.sourceLogo} />
+              <Text style={[styles.sourceTabText, activeSource === src && styles.sourceTabTextActive]}>
+                {src.toUpperCase()}
+              </Text>
+            </View>
+            {activeSource === src && <View style={styles.sourceTabIndicator} />}
           </TouchableOpacity>
         ))}
       </View>
@@ -178,7 +200,7 @@ export default function HomeScreen() {
 
       {brochures.length === 0 ? (
         <View style={styles.center}>
-          <Text style={styles.emptyText}>No Parkside pages from {activeSource}</Text>
+          <Text style={styles.emptyText}>За съжаление няма Parkside инструменти в брошурите на {activeSource}</Text>
         </View>
       ) : (
         <FlatList
@@ -197,30 +219,66 @@ export default function HomeScreen() {
           )}
           contentContainerStyle={styles.list}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#1a7a2e" />
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#04412C" />
           }
         />
       )}
 
       <ImageViewer page={viewerPage} visible={!!viewerPage} onClose={() => setViewerPage(null)} />
     </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  outerWrapper: {
+    flex: 1,
+    backgroundColor: "rgb(22, 24, 29)",
+    alignItems: "center",
+  },
   safeArea: {
     flex: 1,
-    backgroundColor: "#ebebeb",
+    width: "100%",
+    maxWidth: 500,
+    backgroundColor: "rgb(22, 24, 29)",
   },
   titleBar: {
-    backgroundColor: "#1a7a2e",
-    paddingVertical: 14,
+    backgroundColor: "rgb(22, 24, 29)",
+    paddingVertical: 16,
     paddingHorizontal: 16,
+  },
+  titleBarOuter: {
+    width: "100%",
+    alignItems: "center",
+    backgroundColor: "rgb(22, 24, 29)",
+  },
+  divider: {
+    width: "100%",
+    height: 1,
+    backgroundColor: "rgb(40, 42, 48)",
+  },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  titleWrench: {
+    fontSize: 30,
   },
   titleBarText: {
     color: "#fff",
-    fontSize: 20,
-    fontWeight: "700",
+    fontSize: 22,
+    fontWeight: "800",
+    letterSpacing: 0.5,
+  },
+  titleHighlight: {
+    color: "rgb(4, 65, 44)",
+  },
+  titleSubText: {
+    color: "#888",
+    fontSize: 12,
+    marginTop: 4,
+    letterSpacing: 0.3,
   },
   list: {
     paddingBottom: 16,
@@ -228,32 +286,53 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
     paddingHorizontal: 12,
     marginBottom: 8,
     gap: 8,
   },
   sourceTabs: {
     flexDirection: "row",
-    backgroundColor: "#fff",
+    backgroundColor: "rgb(22, 24, 29)",
     borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
+    borderBottomColor: "rgb(40, 42, 48)",
+    paddingTop: 16,
   },
   sourceTab: {
-    flex: 1,
-    alignItems: "center",
+    paddingHorizontal: 16,
     paddingVertical: 12,
-    opacity: 0.4,
+    position: "relative",
   },
   sourceTabActive: {
     opacity: 1,
-    borderBottomWidth: 3,
-    borderBottomColor: "#1a7a2e",
+  },
+  sourceTabInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  sourceTabText: {
+    fontSize: 13,
+    fontWeight: "700",
+    letterSpacing: 1,
+    color: "#666",
+  },
+  sourceTabTextActive: {
+    color: "rgb(4, 65, 44)",
+  },
+  sourceTabIndicator: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 2,
+    borderRadius: 1,
+    backgroundColor: "rgb(4, 65, 44)",
   },
   sourceLogo: {
-    width: 36,
-    height: 36,
-    borderRadius: 6,
+    width: 20,
+    height: 20,
+    borderRadius: 4,
   },
   datePicker: {
     flexDirection: "row",
@@ -261,24 +340,22 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   datePickerContainer: {
-    backgroundColor: "#ebebeb",
-    borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
+    backgroundColor: "rgb(22, 24, 29)",
   },
   dateChip: {
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: "#e8e8e8",
+    backgroundColor: "rgb(40, 42, 48)",
     marginRight: 8,
   },
   dateChipActive: {
-    backgroundColor: "#1a7a2e",
+    backgroundColor: "rgb(4, 65, 44)",
   },
   dateChipText: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#555",
+    color: "#aaa",
   },
   dateChipTextActive: {
     color: "#fff",
@@ -288,11 +365,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 32,
-    backgroundColor: "#ebebeb",
+    backgroundColor: "rgb(22, 24, 29)",
   },
   loadingText: {
     marginTop: 12,
-    color: "#666",
+    color: "#aaa",
     fontSize: 14,
   },
   errorIcon: {
@@ -302,17 +379,17 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#333",
+    color: "#ccc",
   },
   errorDetail: {
     fontSize: 13,
-    color: "#999",
+    color: "#888",
     marginTop: 4,
     textAlign: "center",
   },
   retry: {
     marginTop: 16,
-    color: "#1a7a2e",
+    color: "rgb(4, 65, 44)",
     fontSize: 14,
     fontWeight: "600",
   },
@@ -322,7 +399,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 15,
-    color: "#666",
+    color: "#aaa",
     textAlign: "center",
   },
 });
