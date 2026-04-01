@@ -5,6 +5,7 @@ import cron from 'node-cron';
 import brochureRoutes, { clearCache } from './routes/brochures.js';
 import { getDb } from './db.js';
 import { scrape } from './scraper.js';
+import { startKeepAlive } from './keep-alive.js';
 
 const app = express();
 const PORT = process.env.PORT;
@@ -45,6 +46,9 @@ cron.schedule(CRON_SCHEDULE, async () => {
     console.error('[cron] Scrape failed:', err.message);
   }
 });
+
+// Keep-alive
+startKeepAlive();
 
 // Run initial scrape on startup
 console.log('[startup] Running initial scrape...');

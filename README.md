@@ -12,7 +12,8 @@ A web/mobile app that automatically scrapes **Lidl** and **Kaufland** Bulgaria b
 4. Detects Parkside pages by searching keywords and links
 5. Stores results in a local **SQLite** database with in-memory response caching
 6. A **cron job** re-scrapes daily to pick up new brochures
-7. The **app** displays Parkside pages with tab navigation (Lidl/Kaufland) and date-based brochure picker
+7. A **self-ping cron** hits endpoint every 14 min (08:00–23:00 Bulgarian time) to prevent backend from sleeping when using free plans (for example Render.com)
+8. The **app** displays Parkside pages with tab navigation (Lidl/Kaufland) and date-based brochure picker
 
 ## Project Structure
 
@@ -23,6 +24,7 @@ parkside-brochure/
 │   │   ├── index.js          # Express server + cron scheduler
 │   │   ├── scraper.js         # Lidl + Kaufland scraping logic
 │   │   ├── db.js              # SQLite database layer
+│   │   ├── keep-alive.js      # Self-ping cron (08:00–23:00 BG time)
 │   │   ├── routes/
 │   │   │   └── brochures.js   # REST API endpoints
 │   │   └── scrape-once.js     # Standalone scrape test script
@@ -94,6 +96,8 @@ Backend environment variables (`.env`):
 | `CRON_SCHEDULE`       | Scrape frequency (cron syntax) |
 | `DB_PATH`             | SQLite database path           |
 | `MAX_BROCHURE_AGE_DAYS`| Auto-cleanup old brochures   |
+| `ALLOWED_ORIGINS`     | Comma-separated CORS origins   |
+| `KEEP_ALIVE_URL`      | Public URL for self-ping (prevents Render sleep) |
 
 Mobile environment variables (`.env`):
 
